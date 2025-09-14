@@ -80,52 +80,46 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
 
-      //new JoystickButton(m_driverController, XboxController.Button.kB.value)
-      //  .whileTrue(new DriveToPoint(m_robotDrive, 0.2, 0, 0, 0.05, 1));
+    //new JoystickButton(m_driverController, XboxController.Button.kB.value)
+    //  .whileTrue(new DriveToPoint(m_robotDrive, 0.2, 0, 0, 0.05, 1));
 
-        // Go to Default (can always do this)
-        new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
+    // Go to Default (can always do this)
+    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
         .onTrue(
-            new InstantCommand(() -> {
-                m_armevator.setEleTarget(10);
-                m_armevator.setArmTarget(0);
-            })
-        );
+            new InstantCommand(() -> m_armevator.manualReturnToDefault())
+    );
 
-            // Intake - only if at default
-          new JoystickButton(m_driverController, XboxController.Button.kX.value)
-          .onTrue(
-              new ConditionalCommand(
-                  // If at default, go to intake
-                  new InstantCommand(() -> m_armevator.setEleTarget(0)),
-                  // Otherwise, go to default first, then intake
-                  new InstantCommand(() -> {
-                      m_armevator.setEleTarget(10);
-                      m_armevator.setArmTarget(0);
-                  })
-                  .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget() && m_armevator.eleAtTarget()))
-                  .andThen(new InstantCommand(() -> m_armevator.setEleTarget(0))),
-                  // Condition: check if at default
-                  () -> m_armevator.isAtDefault()
-              )
-          );
+    // Intake - only if at default
+    new JoystickButton(m_driverController, XboxController.Button.kX.value)
+        .onTrue(
+            new ConditionalCommand(
+            // If at default, go to intake
+            new InstantCommand(() -> m_armevator.setEleTarget(0)),
+            // Otherwise, go to default first, then intake
+            new InstantCommand(() -> m_armevator.manualReturnToDefault())
+                .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget() && m_armevator.eleAtTarget()))
+                .andThen(new InstantCommand(() -> m_armevator.setEleTarget(0))),
+            // Condition: check if at default
+            () -> m_armevator.isSafeForManualCommand()
+        )
+    );
 
-            // Level 2 - only if at default
+    // Level 2 - only if at default
     new JoystickButton(m_driverController, XboxController.Button.kA.value)
         .onTrue(
             new ConditionalCommand(
-                // If at default, do Level 2 sequence
-                new InstantCommand(() -> m_armevator.setArmTarget(50))
-                    .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
-                    .andThen(new InstantCommand(() -> m_armevator.setEleTarget(0))),
-                // Otherwise, print error or go to default first
-                new PrintCommand("Must be at default position before going to Level 2!"),
-                // Condition: check if at default
-                () -> m_armevator.isAtDefault()
-            )
-        );
+            // If at default, do Level 2 sequence
+            new InstantCommand(() -> m_armevator.setArmTarget(50))
+                .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
+                .andThen(new InstantCommand(() -> m_armevator.setEleTarget(0))),
+            // Otherwise, print error or go to default first
+            new PrintCommand("Must be at default position before going to Level 2!"),
+            // Condition: check if at default
+            () -> m_armevator.isSafeForManualCommand()
+        )
+    );
 
-            // Level 3 - only if at default  
+    // Level 3 - only if at default  
     new JoystickButton(m_driverController, XboxController.Button.kB.value)
     .onTrue(
         new ConditionalCommand(
@@ -136,36 +130,36 @@ public class RobotContainer {
             // Otherwise, print error
             new PrintCommand("Must be at default position before going to Level 3!"),
             // Condition: check if at default
-            () -> m_armevator.isAtDefault()
+            () -> m_armevator.isSafeForManualCommand()
         )
     );
 
-        // Level 4 - only if at default
-        new JoystickButton(m_driverController, XboxController.Button.kY.value)
+    // Level 4 - only if at default
+    new JoystickButton(m_driverController, XboxController.Button.kY.value)
         .onTrue(
             new ConditionalCommand(
-                // If at default, do Level 4 sequence
-                new InstantCommand(() -> m_armevator.setArmTarget(190))
-                    .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
-                    .andThen(new InstantCommand(() -> m_armevator.setEleTarget(23))),
-                // Otherwise, print error
-                new PrintCommand("Must be at default position before going to Level 4!"),
-                // Condition: check if at default
-                () -> m_armevator.isAtDefault()
-            )
-        );
+            // If at default, do Level 4 sequence
+            new InstantCommand(() -> m_armevator.setArmTarget(190))
+                .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
+                .andThen(new InstantCommand(() -> m_armevator.setEleTarget(23))),
+            // Otherwise, print error
+            new PrintCommand("Must be at default position before going to Level 4!"),
+            // Condition: check if at default
+            () -> m_armevator.isSafeForManualCommand()
+        )
+    );
     
-        new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
+    new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
         .onTrue(
             new ConditionalCommand(
-                // If at level position, go to scoring
-                new InstantCommand(() -> m_armevator.setArmTarget(100)),
-                // Otherwise, print error
-                new PrintCommand("Must be at Level 2, 3, or 4 before scoring!"),
-                // Condition: check if at any level position
-                () -> m_armevator.isAtLevelPosition()
-            )
-        );
+            // If at level position, go to scoring
+            new InstantCommand(() -> m_armevator.setArmTarget(100)),
+            // Otherwise, print error
+            new PrintCommand("Must be at Level 2, 3, or 4 before scoring!"),
+            // Condition: check if at any level position
+            () -> m_armevator.isAtLevelPosition() && !m_armevator.isAnySequenceActive()
+        )
+    );
     
 
   }
