@@ -20,7 +20,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
+import frc.robot.commands.AutoAlign;
 import frc.robot.commands.DriveToPoint;
+import frc.robot.commands.LimelightTestCommand;
 import frc.robot.subsystems.Armevator;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.utils.Pose;
@@ -48,10 +50,14 @@ public class RobotContainer {
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
+  private final LimelightTestCommand aprilTagReader;
+
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+
+    aprilTagReader = new LimelightTestCommand();
 
     // Configure the button bindings
     configureButtonBindings();
@@ -67,6 +73,8 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
                 true),
             m_robotDrive));
+
+    aprilTagReader.schedule();
   }
 
   /**
@@ -80,93 +88,8 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
 
-      //new JoystickButton(m_driverController, XboxController.Button.kB.value)
-      //  .whileTrue(new DriveToPoint(m_robotDrive, 0.2, 0, 0, 0.05, 1));
-
-        // Go to Default (can always do this)
-        new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
-        .onTrue(
-            new InstantCommand(() -> {
-                m_armevator.setEleTarget(10);
-                m_armevator.setArmTarget(0);
-            })
-        );
-
-            // Intake - only if at default
-          new JoystickButton(m_driverController, XboxController.Button.kX.value)
-          .onTrue(
-              new ConditionalCommand(
-                  // If at default, go to intake
-                  new InstantCommand(() -> m_armevator.setEleTarget(0)),
-                  // Otherwise, go to default first, then intake
-                  new InstantCommand(() -> {
-                      m_armevator.setEleTarget(10);
-                      m_armevator.setArmTarget(0);
-                  })
-                  .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget() && m_armevator.eleAtTarget()))
-                  .andThen(new InstantCommand(() -> m_armevator.setEleTarget(0))),
-                  // Condition: check if at default
-                  () -> m_armevator.isAtDefault()
-              )
-          );
-
-            // Level 2 - only if at default
-    new JoystickButton(m_driverController, XboxController.Button.kA.value)
-        .onTrue(
-            new ConditionalCommand(
-                // If at default, do Level 2 sequence
-                new InstantCommand(() -> m_armevator.setArmTarget(50))
-                    .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
-                    .andThen(new InstantCommand(() -> m_armevator.setEleTarget(0))),
-                // Otherwise, print error or go to default first
-                new PrintCommand("Must be at default position before going to Level 2!"),
-                // Condition: check if at default
-                () -> m_armevator.isAtDefault()
-            )
-        );
-
-            // Level 3 - only if at default  
-    new JoystickButton(m_driverController, XboxController.Button.kB.value)
-    .onTrue(
-        new ConditionalCommand(
-            // If at default, do Level 3 sequence
-            new InstantCommand(() -> m_armevator.setArmTarget(190))
-                .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
-                .andThen(new InstantCommand(() -> m_armevator.setEleTarget(0))),
-            // Otherwise, print error
-            new PrintCommand("Must be at default position before going to Level 3!"),
-            // Condition: check if at default
-            () -> m_armevator.isAtDefault()
-        )
-    );
-
-        // Level 4 - only if at default
-        new JoystickButton(m_driverController, XboxController.Button.kY.value)
-        .onTrue(
-            new ConditionalCommand(
-                // If at default, do Level 4 sequence
-                new InstantCommand(() -> m_armevator.setArmTarget(190))
-                    .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
-                    .andThen(new InstantCommand(() -> m_armevator.setEleTarget(23))),
-                // Otherwise, print error
-                new PrintCommand("Must be at default position before going to Level 4!"),
-                // Condition: check if at default
-                () -> m_armevator.isAtDefault()
-            )
-        );
-    
         new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
-        .onTrue(
-            new ConditionalCommand(
-                // If at level position, go to scoring
-                new InstantCommand(() -> m_armevator.setArmTarget(100)),
-                // Otherwise, print error
-                new PrintCommand("Must be at Level 2, 3, or 4 before scoring!"),
-                // Condition: check if at any level position
-                () -> m_armevator.isAtLevelPosition()
-            )
-        );
-    
+                  .onTrue(new LimelightTestCommand());
 
   }
 
