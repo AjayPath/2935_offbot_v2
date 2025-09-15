@@ -86,36 +86,39 @@ public class RobotContainer {
     // Go to Default (can always do this)
     new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
         .onTrue(
-            new InstantCommand(() -> m_armevator.manualReturnToDefault())
+            new ConditionalCommand(
+                new InstantCommand(() -> m_armevator.manualReturnToDefault()), 
+                
+                new PrintCommand("WARNING: Sequence active - forcing return to default!")
+                    .andThen(new InstantCommand(() -> m_armevator.manualReturnToDefault())), 
+                    
+                () -> m_armevator.canReturnToDefault())
     );
 
-    // Intake - only if at default
     new JoystickButton(m_driverController, XboxController.Button.kX.value)
         .onTrue(
             new ConditionalCommand(
-            // If at default, go to intake
-            new InstantCommand(() -> m_armevator.setEleTarget(0)),
-            // Otherwise, go to default first, then intake
-            new InstantCommand(() -> m_armevator.manualReturnToDefault())
-                .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget() && m_armevator.eleAtTarget()))
-                .andThen(new InstantCommand(() -> m_armevator.setEleTarget(0))),
-            // Condition: check if at default
-            () -> m_armevator.isSafeForManualCommand()
-        )
-    );
+                // If safe for intake, execute
+                new InstantCommand(() -> m_armevator.setEleTarget(0)),
+                // If not safe, give specific error message
+                new PrintCommand("INTAKE BLOCKED: - Press Right Bumper to return to default first!"),
+                // Condition: check if safe for intake
+                () -> m_armevator.isSafeForIntakeCommand()
+            )
+        );
 
     // Level 2 - only if at default
     new JoystickButton(m_driverController, XboxController.Button.kA.value)
         .onTrue(
             new ConditionalCommand(
             // If at default, do Level 2 sequence
-            new InstantCommand(() -> m_armevator.setArmTarget(50))
+            new InstantCommand(() -> m_armevator.setArmTarget(40))
                 .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
                 .andThen(new InstantCommand(() -> m_armevator.setEleTarget(0))),
             // Otherwise, print error or go to default first
             new PrintCommand("Must be at default position before going to Level 2!"),
             // Condition: check if at default
-            () -> m_armevator.isSafeForManualCommand()
+            () -> m_armevator.isSafeForLevelCommands()
         )
     );
 
@@ -130,7 +133,7 @@ public class RobotContainer {
             // Otherwise, print error
             new PrintCommand("Must be at default position before going to Level 3!"),
             // Condition: check if at default
-            () -> m_armevator.isSafeForManualCommand()
+            () -> m_armevator.isSafeForLevelCommands()
         )
     );
 
@@ -141,11 +144,11 @@ public class RobotContainer {
             // If at default, do Level 4 sequence
             new InstantCommand(() -> m_armevator.setArmTarget(190))
                 .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
-                .andThen(new InstantCommand(() -> m_armevator.setEleTarget(23))),
+                .andThen(new InstantCommand(() -> m_armevator.setEleTarget(23.5))),
             // Otherwise, print error
             new PrintCommand("Must be at default position before going to Level 4!"),
             // Condition: check if at default
-            () -> m_armevator.isSafeForManualCommand()
+            () -> m_armevator.isSafeForLevelCommands()
         )
     );
     
@@ -157,7 +160,8 @@ public class RobotContainer {
             // Otherwise, print error
             new PrintCommand("Must be at Level 2, 3, or 4 before scoring!"),
             // Condition: check if at any level position
-            () -> m_armevator.isAtLevelPosition() && !m_armevator.isAnySequenceActive()
+            //() -> m_armevator.isAtLevelPosition() && !m_armevator.isAnySequenceActive()
+            () -> m_armevator.isSafeForScoringCommand()
         )
     );
     

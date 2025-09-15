@@ -14,6 +14,7 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Configs;
 import frc.robot.utils.APPID;
 
@@ -42,16 +43,14 @@ public class Armevator extends SubsystemBase {
 
   // Digital Sensor Inputs
   private final DigitalInput intakeSensor = new DigitalInput(1);
-  private final DigitalInput scoringSensor = new DigitalInput(2);
 
   // State Tracking
   private boolean previousIntakeSensorState = false;
-  private boolean previousScoringSensorState = true;
+  private Timer intakeDelayTimer = new Timer();
   private Timer intakeTimer = new Timer();
-  private Timer returnToDefaultTimer = new Timer();
+  private boolean intakeDelayActive = false;
   private boolean intakeSequenceActive = false;
   private boolean waitingAtIntake = false;
-  private boolean returnToDefaultActive = false;
 
   // Setup Variables
   private static final double ARM_GEAR_RATIO = 70;
@@ -70,12 +69,11 @@ public class Armevator extends SubsystemBase {
     armPID = new APPID(0.025, 0, 0, 1);
     armPID.setMaxOutput(0.7);
 
-    elePID = new APPID(0.07, 0, 0, 1);
-    elePID.setDesiredValue(0.5);
+    elePID = new APPID(0.07, 0, 0, 0.5);
+    elePID.setMaxOutput(1);
 
     // Initialize Sensor States
     previousIntakeSensorState = intakeSensor.get();
-    previousScoringSensorState = scoringSensor.get();
 
   }
 
@@ -93,20 +91,12 @@ public class Armevator extends SubsystemBase {
   // Sensor Handling ---------
   private void handleSensorTransitions() {
     boolean currentIntakeSensorState = intakeSensor.get();
-    boolean currentScoringSensorState = scoringSensor.get();
 
     // Handle Intake Sensor
-    if (!previousIntakeSensorState && currentIntakeSensorState) {
+    if (previousIntakeSensorState && !currentIntakeSensorState) {
       // Sensor just triggered
-      if (isAtDefault() && !intakeSequenceActive && !returnToDefaultActive) {
+      if (isAtDefault() && !intakeSequenceActive) {
         startIntakeSequence();
-      }
-    }
-
-    // Handle Scoring Sensor
-    if (previousScoringSensorState && !currentScoringSensorState) {
-      if (isAtScoringPosition()) {
-        startReturnToDefault();
       }
     }
 
@@ -114,42 +104,33 @@ public class Armevator extends SubsystemBase {
       updateIntakeSequence();
     }
 
-    if (returnToDefaultActive) {
-      updateReturnToDefault();
-    }
-
     previousIntakeSensorState = currentIntakeSensorState;
-    previousScoringSensorState = currentScoringSensorState;
 
   }
 
-  private void startIntakeSequence() {
+  private void startIntakeSequence() { 
     intakeSequenceActive = true;
+    intakeDelayActive = true;
     waitingAtIntake = false;
-    setEleTarget(0);
+
+    intakeDelayTimer.restart();
+    //setEleTarget(0);
   }
 
   private void updateIntakeSequence() {
-    if (!waitingAtIntake && isAtIntake()) {
+
+    if (intakeDelayActive && intakeDelayTimer.hasElapsed(0.75)) {
+      setEleTarget(0);
+      intakeDelayActive = false;
+    }
+
+    if (!intakeDelayActive && !waitingAtIntake && isAtIntake()) {
       waitingAtIntake = true;
       intakeTimer.restart();
-    } else if (waitingAtIntake && intakeTimer.hasElapsed(1)) {
-      startReturnToDefault();
+    } else if (!intakeDelayActive && waitingAtIntake && intakeTimer.hasElapsed(0.5)) {
+      manualReturnToDefault();
       intakeSequenceActive = false;
       waitingAtIntake = false;
-    }
-  }
-
-  private void startReturnToDefault() {
-    returnToDefaultActive = true;
-    returnToDefaultTimer.restart();
-  }
-
-  private void updateReturnToDefault() {
-    if (returnToDefaultTimer.hasElapsed(2)) {
-      setEleTarget(10);
-      setArmTarget(0);
-      returnToDefaultActive = false;
     }
   }
 
@@ -158,8 +139,8 @@ public class Armevator extends SubsystemBase {
     setArmTarget(0);
     // Stop any active sequence
     intakeSequenceActive = false;
+    intakeDelayActive = false;
     waitingAtIntake = false;
-    returnToDefaultActive = false;
   }
 
   // Get Sensor States --------
@@ -167,20 +148,16 @@ public class Armevator extends SubsystemBase {
     return intakeSensor.get();
   }
 
-  public boolean getScoringSensorState() {
-    return scoringSensor.get();
-  }
-
   public boolean isIntakeSequenceActive() {
     return intakeSequenceActive;
   }
 
-  public boolean isReturnToDefaultActive() {
-    return returnToDefaultActive;
+  public boolean isAnySequenceActive() {
+    return intakeSequenceActive || intakeDelayActive;
   }
 
-  public boolean isAnySequenceActive() {
-    return intakeSequenceActive || returnToDefaultActive;
+  public boolean isIntakeDelayActive() {
+    return intakeDelayActive;
   }
 
   // Elevator ---------
@@ -235,6 +212,26 @@ public class Armevator extends SubsystemBase {
 
   // State Checks --------
 
+  public boolean isSafeForLevelCommands() {
+    return isAtDefault() && !isAnySequenceActive();
+  }
+
+  public boolean isSafeForScoringCommand() {
+    return isAtLevelPosition() && !isAnySequenceActive();
+  }
+
+  public boolean isSafeForIntakeCommand() {
+    return isAtDefault() && !isAnySequenceActive();
+  }
+
+  public boolean canReturnToDefault() {
+    return !isAnySequenceActive();
+  }
+
+  public boolean isInDangerousPosition() {
+    return isAtScoringPosition();
+  }
+
   public boolean isAtDefault() {
     // Check if both arm and elevator are at default positions
     return Math.abs(getArmPosition() - 0) < 2 && Math.abs(getElevatorPosition() - 10) < 2;
@@ -251,7 +248,7 @@ public class Armevator extends SubsystemBase {
   }
 
   public boolean isAtLevel2() {
-      return Math.abs(getArmPosition() - 50) < 2 && Math.abs(getElevatorPosition() - 0) < 2;
+      return Math.abs(getArmPosition() - 40) < 2 && Math.abs(getElevatorPosition() - 0) < 2;
   }
 
   public boolean isAtLevel3() {
@@ -259,7 +256,7 @@ public class Armevator extends SubsystemBase {
   }
 
   public boolean isAtLevel4() {
-      return Math.abs(getArmPosition() - 190) < 2 && Math.abs(getElevatorPosition() - 23) < 2;
+      return Math.abs(getArmPosition() - 190) < 2 && Math.abs(getElevatorPosition() - 23.5) < 2;
   }
 
   public boolean isAtScoringPosition() {
