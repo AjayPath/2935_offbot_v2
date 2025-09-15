@@ -89,7 +89,7 @@ public class RobotContainer {
   private void configureButtonBindings() {
 
         new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
-                  .onTrue(new LimelightTestCommand());
+                  .onTrue(new AutoAlign(m_robotDrive));
 
   }
 
