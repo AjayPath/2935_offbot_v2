@@ -67,10 +67,10 @@ public class Armevator extends SubsystemBase {
     eleMotor2.configure(Configs.ElevatorSubystem.elevatorConfig2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     armPID = new APPID(0.025, 0, 0, 1);
-    armPID.setMaxOutput(0.7);
+    armPID.setMaxOutput(1);
 
     elePID = new APPID(0.07, 0, 0, 0.5);
-    elePID.setMaxOutput(1);
+    elePID.setMaxOutput(0.75);
 
     // Initialize Sensor States
     previousIntakeSensorState = intakeSensor.get();
@@ -248,7 +248,7 @@ public class Armevator extends SubsystemBase {
   }
 
   public boolean isAtLevel2() {
-      return Math.abs(getArmPosition() - 40) < 2 && Math.abs(getElevatorPosition() - 0) < 2;
+      return Math.abs(getArmPosition() - 50) < 2 && Math.abs(getElevatorPosition() - 0) < 2;
   }
 
   public boolean isAtLevel3() {

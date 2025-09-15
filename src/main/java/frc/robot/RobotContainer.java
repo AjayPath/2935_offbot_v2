@@ -47,6 +47,7 @@ public class RobotContainer {
 
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  XboxController m_operatorController = new XboxController(1);
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -84,7 +85,7 @@ public class RobotContainer {
     //  .whileTrue(new DriveToPoint(m_robotDrive, 0.2, 0, 0, 0.05, 1));
 
     // Go to Default (can always do this)
-    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
+    new JoystickButton(m_operatorController, XboxController.Button.kRightBumper.value)
         .onTrue(
             new ConditionalCommand(
                 new InstantCommand(() -> m_armevator.manualReturnToDefault()), 
@@ -95,7 +96,7 @@ public class RobotContainer {
                 () -> m_armevator.canReturnToDefault())
     );
 
-    new JoystickButton(m_driverController, XboxController.Button.kX.value)
+    new JoystickButton(m_operatorController, XboxController.Button.kB.value)
         .onTrue(
             new ConditionalCommand(
                 // If safe for intake, execute
@@ -108,11 +109,11 @@ public class RobotContainer {
         );
 
     // Level 2 - only if at default
-    new JoystickButton(m_driverController, XboxController.Button.kA.value)
+    new JoystickButton(m_operatorController, XboxController.Button.kA.value)
         .onTrue(
             new ConditionalCommand(
             // If at default, do Level 2 sequence
-            new InstantCommand(() -> m_armevator.setArmTarget(40))
+            new InstantCommand(() -> m_armevator.setArmTarget(50))
                 .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
                 .andThen(new InstantCommand(() -> m_armevator.setEleTarget(0))),
             // Otherwise, print error or go to default first
@@ -123,7 +124,7 @@ public class RobotContainer {
     );
 
     // Level 3 - only if at default  
-    new JoystickButton(m_driverController, XboxController.Button.kB.value)
+    new JoystickButton(m_operatorController, XboxController.Button.kX.value)
     .onTrue(
         new ConditionalCommand(
             // If at default, do Level 3 sequence
@@ -138,7 +139,7 @@ public class RobotContainer {
     );
 
     // Level 4 - only if at default
-    new JoystickButton(m_driverController, XboxController.Button.kY.value)
+    new JoystickButton(m_operatorController, XboxController.Button.kY.value)
         .onTrue(
             new ConditionalCommand(
             // If at default, do Level 4 sequence
@@ -152,7 +153,7 @@ public class RobotContainer {
         )
     );
     
-    new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
+    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
         .onTrue(
             new ConditionalCommand(
             // If at level position, go to scoring
