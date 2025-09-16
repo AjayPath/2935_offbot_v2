@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
-import frc.robot.commands.AutoAlign;
+import frc.robot.commands.AutoStrafe;
 import frc.robot.commands.DriveToPoint;
 import frc.robot.commands.LimelightTestCommand;
 import frc.robot.subsystems.Armevator;
@@ -88,8 +88,11 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
 
-        new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
-                  .onTrue(new AutoAlign(m_robotDrive));
+    new JoystickButton(m_driverController, XboxController.Button.kLeftBumper.value)
+      .onTrue(new AutoStrafe(m_robotDrive, false));
+
+    new JoystickButton(m_driverController, XboxController.Button.kRightBumper.value)
+      .onTrue(new AutoStrafe(m_robotDrive, true));
 
   }
 
