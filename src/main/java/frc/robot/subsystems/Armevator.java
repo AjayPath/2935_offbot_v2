@@ -34,7 +34,6 @@ public class Armevator extends SubsystemBase {
   private final SparkFlex eleMotor2 = new SparkFlex(51, MotorType.kBrushless);
 
   private final RelativeEncoder eleEncoder1 = eleMotor1.getEncoder();
-  private final RelativeEncoder eleEncoder2 = eleMotor2.getEncoder();
 
   private final APPID armPID;
   private final APPID elePID;
