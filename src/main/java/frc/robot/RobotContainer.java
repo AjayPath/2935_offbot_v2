@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -80,9 +81,6 @@ public class RobotContainer {
    * {@link JoystickButton}.
    */
   private void configureButtonBindings() {
-
-    //new JoystickButton(m_driverController, XboxController.Button.kB.value)
-    //  .whileTrue(new DriveToPoint(m_robotDrive, 0.2, 0, 0, 0.05, 1));
 
     // Go to Default (can always do this)
     new JoystickButton(m_operatorController, XboxController.Button.kRightBumper.value)
