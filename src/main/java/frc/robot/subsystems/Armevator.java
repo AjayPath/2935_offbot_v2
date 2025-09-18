@@ -67,7 +67,7 @@ public class Armevator extends SubsystemBase {
     eleMotor2.configure(Configs.ElevatorSubystem.elevatorConfig2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     armPID = new APPID(0.025, 0, 0, 1);
-    armPID.setMaxOutput(1);
+    armPID.setMaxOutput(0.75);
 
     elePID = new APPID(0.07, 0, 0, 0.5);
     elePID.setMaxOutput(0.75);
