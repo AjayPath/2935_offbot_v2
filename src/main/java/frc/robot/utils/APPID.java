@@ -25,7 +25,7 @@ public class APPID {
     private int m_cycleCount; // Current number of cycles in epsilon range
 
     private final Timer pidTimer; // PID Timer
-    private static final double FIXED_DT = 0.02; // Fixed 20ms loop time
+    //private static final double FIXED_DT = 0.02; // Fixed 20ms loop time
 
     /**
      * The constructor below will initialize the PID Controller

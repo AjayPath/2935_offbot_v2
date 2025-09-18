@@ -11,7 +11,10 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Configs;
 import frc.robot.utils.APPID;
 
@@ -38,10 +41,20 @@ public class Armevator extends SubsystemBase {
   private final APPID armPID;
   private final APPID elePID;
 
+  // Digital Sensor Inputs
+  private final DigitalInput intakeSensor = new DigitalInput(1);
+
+  // State Tracking
+  private boolean previousIntakeSensorState = false;
+  private Timer intakeDelayTimer = new Timer();
+  private Timer intakeTimer = new Timer();
+  private boolean intakeDelayActive = false;
+  private boolean intakeSequenceActive = false;
+  private boolean waitingAtIntake = false;
+
   // Setup Variables
   private static final double ARM_GEAR_RATIO = 70;
   private static final double ENCODER_TO_DEGREES = 360/ARM_GEAR_RATIO;
-  private static final double ELE_GEAR_RATIO = 3;
   private double targetElePos = 0;
   private double targetArmPos = 0;
 
@@ -54,10 +67,13 @@ public class Armevator extends SubsystemBase {
     eleMotor2.configure(Configs.ElevatorSubystem.elevatorConfig2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     armPID = new APPID(0.025, 0, 0, 1);
-    armPID.setMaxOutput(0.7);
+    armPID.setMaxOutput(0.75);
 
-    elePID = new APPID(0.07, 0, 0, 1);
-    elePID.setDesiredValue(0.5);
+    elePID = new APPID(0.07, 0, 0, 0.5);
+    elePID.setMaxOutput(0.75);
+
+    // Initialize Sensor States
+    previousIntakeSensorState = intakeSensor.get();
 
   }
 
@@ -66,6 +82,82 @@ public class Armevator extends SubsystemBase {
     // This method will be called once per scheduler run
     runArmPID();
     runElePID();
+
+    // Handle automatic sensor-based transition
+    handleSensorTransitions();
+
+  }
+
+  // Sensor Handling ---------
+  private void handleSensorTransitions() {
+    boolean currentIntakeSensorState = intakeSensor.get();
+
+    // Handle Intake Sensor
+    if (previousIntakeSensorState && !currentIntakeSensorState) {
+      // Sensor just triggered
+      if (isAtDefault() && !intakeSequenceActive) {
+        startIntakeSequence();
+      }
+    }
+
+    if (intakeSequenceActive) {
+      updateIntakeSequence();
+    }
+
+    previousIntakeSensorState = currentIntakeSensorState;
+
+  }
+
+  private void startIntakeSequence() { 
+    intakeSequenceActive = true;
+    intakeDelayActive = true;
+    waitingAtIntake = false;
+
+    intakeDelayTimer.restart();
+    //setEleTarget(0);
+  }
+
+  private void updateIntakeSequence() {
+
+    if (intakeDelayActive && intakeDelayTimer.hasElapsed(0.75)) {
+      setEleTarget(0);
+      intakeDelayActive = false;
+    }
+
+    if (!intakeDelayActive && !waitingAtIntake && isAtIntake()) {
+      waitingAtIntake = true;
+      intakeTimer.restart();
+    } else if (!intakeDelayActive && waitingAtIntake && intakeTimer.hasElapsed(0.5)) {
+      manualReturnToDefault();
+      intakeSequenceActive = false;
+      waitingAtIntake = false;
+    }
+  }
+
+  public void manualReturnToDefault() {
+    setEleTarget(10);
+    setArmTarget(0);
+    // Stop any active sequence
+    intakeSequenceActive = false;
+    intakeDelayActive = false;
+    waitingAtIntake = false;
+  }
+
+  // Get Sensor States --------
+  public boolean getIntakeSensorState() {
+    return intakeSensor.get();
+  }
+
+  public boolean isIntakeSequenceActive() {
+    return intakeSequenceActive;
+  }
+
+  public boolean isAnySequenceActive() {
+    return intakeSequenceActive || intakeDelayActive;
+  }
+
+  public boolean isIntakeDelayActive() {
+    return intakeDelayActive;
   }
 
   // Elevator ---------
@@ -120,10 +212,34 @@ public class Armevator extends SubsystemBase {
 
   // State Checks --------
 
+  public boolean isSafeForLevelCommands() {
+    return isAtDefault() && !isAnySequenceActive();
+  }
+
+  public boolean isSafeForScoringCommand() {
+    return isAtLevelPosition() && !isAnySequenceActive();
+  }
+
+  public boolean isSafeForIntakeCommand() {
+    return isAtDefault() && !isAnySequenceActive();
+  }
+
+  public boolean canReturnToDefault() {
+    return !isAnySequenceActive();
+  }
+
+  public boolean isInDangerousPosition() {
+    return isAtScoringPosition();
+  }
+
   public boolean isAtDefault() {
     // Check if both arm and elevator are at default positions
     return Math.abs(getArmPosition() - 0) < 2 && Math.abs(getElevatorPosition() - 10) < 2;
     // Adjust tolerance values (2) as needed for your system
+  }
+
+  public boolean isAtIntake() {
+    return Math.abs(getArmPosition() - 0) < 2 && Math.abs(getElevatorPosition() - 0) < 2;
   }
 
   public boolean isAtLevelPosition() {
@@ -140,7 +256,15 @@ public class Armevator extends SubsystemBase {
   }
 
   public boolean isAtLevel4() {
-      return Math.abs(getArmPosition() - 190) < 2 && Math.abs(getElevatorPosition() - 23) < 2;
+      return Math.abs(getArmPosition() - 190) < 2 && Math.abs(getElevatorPosition() - 23.5) < 2;
+  }
+
+  public boolean isAtScoringPosition() {
+    return Math.abs(getArmPosition() - 100) < 2;
+  }
+
+  public boolean isSafeForManualCommand() {
+    return isAtDefault() && !isAnySequenceActive();
   }
 
 }
