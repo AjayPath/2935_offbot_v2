@@ -247,4 +247,9 @@ public class DriveSubsystem extends SubsystemBase {
     m_gyro.setYaw(0, 100); // second parameter is timeout ms
   }
 
+  public void resetGyroInAuto() {
+    // Pigeon2 method to set yaw to 0
+    m_gyro.setYaw(180, 100); // second parameter is timeout ms
+  }
+
 }

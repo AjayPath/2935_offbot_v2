@@ -67,7 +67,7 @@ public class Armevator extends SubsystemBase {
     eleMotor2.configure(Configs.ElevatorSubystem.elevatorConfig2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     armPID = new APPID(0.025, 0, 0, 1);
-    armPID.setMaxOutput(0.75);
+    armPID.setMaxOutput(0.7);
 
     elePID = new APPID(0.07, 0, 0, 0.5);
     elePID.setMaxOutput(0.75);
@@ -119,7 +119,7 @@ public class Armevator extends SubsystemBase {
 
   private void updateIntakeSequence() {
 
-    if (intakeDelayActive && intakeDelayTimer.hasElapsed(0.75)) {
+    if (intakeDelayActive && intakeDelayTimer.hasElapsed(0.5)) {
       setEleTarget(0);
       intakeDelayActive = false;
     }
@@ -177,6 +177,11 @@ public class Armevator extends SubsystemBase {
     return elePID.isDone();
   }
 
+    // Add these methods to your Armevator class
+  public boolean eleAtTargetAuto() {
+    return Math.abs(getElevatorPosition() - targetElePos) < 2;
+  }
+
   public void stopElevator() {
     eleMotor1.stopMotor();
     eleMotor2.stopMotor();
@@ -200,6 +205,10 @@ public class Armevator extends SubsystemBase {
 
   public boolean armAtTarget() {
     return armPID.isDone();
+  }
+
+  public boolean armAtTargetAuto() {
+    return Math.abs(getArmPosition() - targetArmPos) < 2;
   }
 
   public void stopArm() {

@@ -17,10 +17,10 @@ public class DriveToPoint extends Command {
     private final double angleTolerance;
     
     // Constants
-    private static final double kDriveP = 0.6;
+    private static final double kDriveP = 0.72;
     private static final double kDriveI = 0.0;
-    private static final double kDriveD = 0.05;
-    private static final double kMaxDriveSpeed = 1;
+    private static final double kDriveD = 0;
+    private static final double kMaxDriveSpeed = 0.25;
     
     private static final double kTurnP = 0.02;
     private static final double kTurnI = 0.0;

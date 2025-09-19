@@ -27,12 +27,15 @@ import frc.robot.utils.Pose;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import java.util.List;
 
 /*
@@ -173,7 +176,38 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return null;
+    return new SequentialCommandGroup(
+        new InstantCommand(() -> m_armevator.setEleTarget(10))
+            .andThen(new WaitUntilCommand(() -> m_armevator.eleAtTargetAuto())),
+        
+        new ParallelCommandGroup(
+            new DriveToPoint(m_robotDrive, 1.67, 0.2, 0, 0.1, 2),
+
+            new SequentialCommandGroup(
+                new InstantCommand(() -> m_armevator.setArmTarget(190))
+                    .andThen(new WaitUntilCommand(() -> m_armevator.armAtTargetAuto())),
+                new InstantCommand(() -> m_armevator.setEleTarget(23))
+                    .andThen(new WaitUntilCommand(() -> m_armevator.eleAtTargetAuto()))
+
+            )
+        ),
+
+        new InstantCommand(() -> m_armevator.setArmTarget(100))
+            .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget())),
+
+        new ParallelCommandGroup(
+            new DriveToPoint(m_robotDrive, 0.5, 0, 0),
+
+            new SequentialCommandGroup(
+                new InstantCommand(() -> m_armevator.setArmTarget(0))
+                    .andThen(new WaitUntilCommand(() -> m_armevator.armAtTargetAuto())),
+                new InstantCommand(() -> m_armevator.setEleTarget(10))
+                    .andThen(new WaitUntilCommand(() -> m_armevator.eleAtTargetAuto()))
+            )
+        ),
+
+        new InstantCommand(() -> m_robotDrive.resetGyroInAuto())
+    );
   }
 
   public DriveSubsystem getDriveSubsystem() {
