@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -176,6 +177,23 @@ public class RobotContainer {
                 .andThen(new InstantCommand(() -> m_armevator.setArmTarget(180))),
             // Otherwise, print error
             new PrintCommand("Must be at default position before going to High Ball Removal!"),
+            // Condition: check if at default (same as other levels)
+            () -> m_armevator.isSafeForLevelCommands()
+        )
+    );
+
+    new JoystickButton(m_driverController, XboxController.Button.kY.value)
+    .onTrue(
+        new ConditionalCommand(
+            // If at default, do Low Ball Removal sequence
+            new InstantCommand(() -> m_armevator.setArmTarget(50))
+                .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget()))
+                .andThen(new InstantCommand(() -> m_armevator.setEleTarget(2)))
+                .andThen(new WaitUntilCommand(() -> m_armevator.eleAtTarget()))
+                .andThen(new WaitCommand(0.25))
+                .andThen(new InstantCommand(() -> m_armevator.setArmTarget(180))),
+            // Otherwise, print error
+            new PrintCommand("Must be at default position before going to Low Ball Removal!"),
             // Condition: check if at default (same as other levels)
             () -> m_armevator.isSafeForLevelCommands()
         )
