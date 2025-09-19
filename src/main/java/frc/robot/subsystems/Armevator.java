@@ -281,7 +281,7 @@ public class Armevator extends SubsystemBase {
   }
 
   public boolean isAtHighBallRemoval() {
-    return Math.abs(getArmPosition() - 180) < 2 && Math.abs(getElevatorPosition() - 10) < 2;
+    return Math.abs(getArmPosition() - 170) < 2 && Math.abs(getElevatorPosition() - 8) < 2;
   }
 
 }

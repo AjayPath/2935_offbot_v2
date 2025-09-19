@@ -54,6 +54,9 @@ public class RobotContainer {
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
   XboxController m_operatorController = new XboxController(1);
 
+  Trigger rightTrigger = new Trigger(() -> m_operatorController.getRightTriggerAxis() > 0.5);
+  Trigger leftTrigger = new Trigger(() -> m_operatorController.getLeftTriggerAxis() > 0.5);
+
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
@@ -168,13 +171,13 @@ public class RobotContainer {
         )
     );
     
-    new JoystickButton(m_driverController, XboxController.Button.kA.value)
+    rightTrigger
     .onTrue(
         new ConditionalCommand(
             // If at default, do High Ball Removal sequence
-            new InstantCommand(() -> m_armevator.setEleTarget(10))
+            new InstantCommand(() -> m_armevator.setEleTarget(8))
                 .andThen(new WaitUntilCommand(() -> m_armevator.eleAtTarget()))
-                .andThen(new InstantCommand(() -> m_armevator.setArmTarget(180))),
+                .andThen(new InstantCommand(() -> m_armevator.setArmTarget(170))),
             // Otherwise, print error
             new PrintCommand("Must be at default position before going to High Ball Removal!"),
             // Condition: check if at default (same as other levels)
@@ -182,7 +185,7 @@ public class RobotContainer {
         )
     );
 
-    new JoystickButton(m_driverController, XboxController.Button.kY.value)
+    leftTrigger
     .onTrue(
         new ConditionalCommand(
             // If at default, do Low Ball Removal sequence
