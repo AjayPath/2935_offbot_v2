@@ -167,6 +167,19 @@ public class RobotContainer {
         )
     );
     
+    new JoystickButton(m_driverController, XboxController.Button.kA.value)
+    .onTrue(
+        new ConditionalCommand(
+            // If at default, do High Ball Removal sequence
+            new InstantCommand(() -> m_armevator.setEleTarget(10))
+                .andThen(new WaitUntilCommand(() -> m_armevator.eleAtTarget()))
+                .andThen(new InstantCommand(() -> m_armevator.setArmTarget(180))),
+            // Otherwise, print error
+            new PrintCommand("Must be at default position before going to High Ball Removal!"),
+            // Condition: check if at default (same as other levels)
+            () -> m_armevator.isSafeForLevelCommands()
+        )
+    );
 
   }
 

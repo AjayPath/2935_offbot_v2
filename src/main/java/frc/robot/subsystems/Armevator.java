@@ -253,7 +253,7 @@ public class Armevator extends SubsystemBase {
 
   public boolean isAtLevelPosition() {
       // Check if robot is at any level position (for scoring validation)
-      return isAtLevel2() || isAtLevel3() || isAtLevel4();
+      return isAtLevel2() || isAtLevel3() || isAtLevel4() || isAtHighBallRemoval();
   }
 
   public boolean isAtLevel2() {
@@ -274,6 +274,10 @@ public class Armevator extends SubsystemBase {
 
   public boolean isSafeForManualCommand() {
     return isAtDefault() && !isAnySequenceActive();
+  }
+
+  public boolean isAtHighBallRemoval() {
+    return Math.abs(getArmPosition() - 180) < 2 && Math.abs(getElevatorPosition() - 10) < 2;
   }
 
 }
