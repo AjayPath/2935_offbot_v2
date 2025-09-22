@@ -20,7 +20,7 @@ public class DriveToPoint extends Command {
     private static final double kDriveP = 0.72;
     private static final double kDriveI = 0.0;
     private static final double kDriveD = 0;
-    private static final double kMaxDriveSpeed = 0.25;
+    private static final double kMaxDriveSpeed = 0.10;
     
     private static final double kTurnP = 0.02;
     private static final double kTurnI = 0.0;

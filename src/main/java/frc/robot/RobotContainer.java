@@ -202,6 +202,9 @@ public class RobotContainer {
         )
     );
 
+    new JoystickButton(m_driverController, XboxController.Button.kStart.value)
+        .onTrue(new InstantCommand(() -> m_robotDrive.resetGyro()));
+
   }
 
   /**
@@ -215,7 +218,7 @@ public class RobotContainer {
             .andThen(new WaitUntilCommand(() -> m_armevator.eleAtTargetAuto())),
         
         new ParallelCommandGroup(
-            new DriveToPoint(m_robotDrive, 1.67, 0.2, 0, 0.1, 2),
+            new DriveToPoint(m_robotDrive, 2, 0, 0, 0.2, 2).withTimeout(9),
 
             new SequentialCommandGroup(
                 new InstantCommand(() -> m_armevator.setArmTarget(190))
@@ -223,6 +226,7 @@ public class RobotContainer {
                 new InstantCommand(() -> m_armevator.setEleTarget(23))
                     .andThen(new WaitUntilCommand(() -> m_armevator.eleAtTargetAuto()))
 
+                    
             )
         ),
 
@@ -230,7 +234,7 @@ public class RobotContainer {
             .andThen(new WaitUntilCommand(() -> m_armevator.armAtTarget())),
 
         new ParallelCommandGroup(
-            new DriveToPoint(m_robotDrive, 0.5, 0, 0),
+            new DriveToPoint(m_robotDrive, 0.75, 0, 0),
 
             new SequentialCommandGroup(
                 new InstantCommand(() -> m_armevator.setArmTarget(0))
